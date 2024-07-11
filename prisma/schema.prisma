@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Profile {
+  id String @id @default(uuid())
+
+  name   String?
+  email  String
+  bio    String?
+  avatar String?
+  userId String  @unique
+
+  Server  Server[]
+  member  Member[]
+  channel Channel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profile")
+}
+
+enum Role {
+  GUEST
+  ADMIN
+  MODERATOR
+}
+
+model Server {
+  id String @id @default(uuid())
+
+  name       String
+  image      String
+  inviteCode String
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  member  Member[]
+  channel Channel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("server")
+}
+
+model Member {
+  id String @id @default(uuid())
+
+  role Role @default(GUEST)
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("member")
+}
+
+enum ChenneType {
+  TEXT
+  VOICE
+  VIDEO
+}
+
+model Channel {
+  id String @id @default(uuid())
+
+  name String
+  type ChenneType @default(TEXT)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("channel")
+}
